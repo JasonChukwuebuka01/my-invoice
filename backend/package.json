@@ -1,0 +1,27 @@
+{
+    "name": "invoicegenerator-backend",
+    "version": "1.0.0",
+    "main": "src/index.mjs",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start:dev": "nodemon ./src/index.mjs",
+        "start": "node ./src/index.mjs"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "Backend for invoice generator",
+    "dependencies": {
+        "body-parser": "^2.2.1",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "express": "^5.2.1",
+        "express-validator": "^7.3.1",
+        "mongoose": "^9.1.1",
+        "puppeteer": "^24.34.0"
+    },
+    "type": "module",
+    "devDependencies": {
+        "nodemon": "^3.1.11"
+    }
+}
