@@ -8,7 +8,7 @@ import { checkSchema, validationResult, matchedData } from 'express-validator';
 import { signupSchema } from '../validationSchema/userSchema.mjs';
 import dotenv from 'dotenv';
 import { verifyToken } from '../middleware/auth.mjs';
-import { redirectIfAuthenticated } from '../middleware/verifyredirectAuth.mjs';
+
 
 dotenv.config();
 
@@ -74,10 +74,10 @@ router.post('/api/auth/signup',
             res.status(500).json({ message: 'Failed to create user or send verification email' });
         }
 
-
-
     }
 );
+
+
 
 
 
@@ -101,5 +101,8 @@ router.get('/api/auth/verify-email/:token', async (req, res) => {
         res.status(500).json({ message: 'Failed to verify email' });
     }
 });
+
+
+
 
 export default router;

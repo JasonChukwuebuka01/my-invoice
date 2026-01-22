@@ -1,7 +1,7 @@
 import Router from 'express'
 import { login } from '../Controllers/loginAuth.mjs'
 import { verifyToken } from '../middleware/auth.mjs';
-import { redirectIfAuthenticated } from '../middleware/verifyredirectAuth.mjs';
+
 
 
 

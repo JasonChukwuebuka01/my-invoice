@@ -1,16 +1,17 @@
 import express from 'express';
+import passport from 'passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { checkSchema, matchedData, validationResult } from 'express-validator';
 import { invoiceSchema } from './validationSchema/userInvoiceSchema.mjs';
 import signupRouter from './routes/signupRoute.mjs';
 import signInRouter from './routes/signInRoute.mjs';
+import signInWithGoogleRouter from './routes/signInWithGoogle.mjs';
 import puppeteer from 'puppeteer';
 import { generateHTML } from './utils/pdfTemplate.mjs';
 import mongoose from 'mongoose';
 import { Invoice } from './mongoose/schemas/invoice.mjs';
 import { generateInvoiceNumber } from './utils/helper.mjs';
-import { checkAuthenticate } from './utils/authenticate.mjs';
 import { verifyToken } from './middleware/auth.mjs';
 
 
@@ -25,7 +26,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(signupRouter);
-app.use(signInRouter)
+app.use(signInRouter);
+app.use(signInWithGoogleRouter);
+
+//app.use(passport.initialize());
+//app.use(passport.session());
+
+
 
 
 
@@ -36,7 +43,7 @@ mongoose.connect("mongodb://localhost/invoicegeneratorapi")
 
 
 
-app.get('/', verifyToken,(req, res) => {
+app.get('/', verifyToken, (req, res) => {
     res.send('Invoice Generator API is running');
 });
 
