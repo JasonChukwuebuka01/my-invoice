@@ -14,13 +14,14 @@ dotenv.config();
 
 
 // 1. Trigger the Google Popup
-router.get('/google', passport.authenticate('google'));
+router.get('/google', passport.authenticate('google', { session: false, prompt: 'select_account' }));
 
 
 
 // 2. The Callback (Where Google sends the user back)
 router.get('/api/auth/google/callback',
-    passport.authenticate('google'),
+    passport.authenticate('google', { session: false }),
+
     (req, res) => {
 
         console.log('User authenticated via Google:', req.user);
@@ -28,7 +29,8 @@ router.get('/api/auth/google/callback',
         const token = jwt.sign(
             {
                 id: req.user._id,
-                isVerified: req.user.isVerified
+                isVerified: req.user.isVerified,
+                isOnboarded: req.user.isOnboarded
             },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }

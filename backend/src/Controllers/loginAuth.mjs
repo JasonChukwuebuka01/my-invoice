@@ -24,7 +24,11 @@ export const login = async (req, res) => {
         // 3. Create the Badge (JWT)
         // We include the ID and the verification status in the badge
         const token = jwt.sign(
-            { id: user._id, isVerified: user.isVerified },
+            {
+                id: user._id,
+                isVerified: user.isVerified,
+                isOnboarded: user.isOnboarded
+            },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );

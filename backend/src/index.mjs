@@ -29,15 +29,15 @@ app.use(signupRouter);
 app.use(signInRouter);
 app.use(signInWithGoogleRouter);
 
-//app.use(passport.initialize());
-//app.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
 
 
 mongoose.connect("mongodb://localhost/invoicegeneratorapi")
-    .then(() => console.log('✅ Connected to MongoDB....'))
+    .then(() => console.log('✅ Connected to MongoDB...'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 
@@ -170,11 +170,6 @@ app.get('/api/invoices/:id/download', async (req, res) => {
 });
 
 
-
-
-app.get("/api/login", (req, res) => {
-    res.json({ message: "Login endpoint - to be implemented" });
-});
 
 
 
