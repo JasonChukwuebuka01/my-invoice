@@ -9,6 +9,7 @@ passport.use(new GoogleStrategy({
     scope: ['profile', 'email']
 },
     async (accessToken, refreshToken, profile, done) => {
+        
         try {
             // 1. Check if user already exists in our 'Vault'
             let user = await User.findOne({

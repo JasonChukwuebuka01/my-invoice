@@ -7,6 +7,7 @@ import { invoiceSchema } from './validationSchema/userInvoiceSchema.mjs';
 import signupRouter from './routes/signupRoute.mjs';
 import signInRouter from './routes/signInRoute.mjs';
 import signInWithGoogleRouter from './routes/signInWithGoogle.mjs';
+import userOnboarding from './routes/userOnboarding.mjs';
 import puppeteer from 'puppeteer';
 import { generateHTML } from './utils/pdfTemplate.mjs';
 import mongoose from 'mongoose';
@@ -28,9 +29,10 @@ app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);
 app.use(signInWithGoogleRouter);
+app.use(userOnboarding);
 
 app.use(passport.initialize());
-app.use(passport.session());
+//app.use(passport.session());
 
 
 

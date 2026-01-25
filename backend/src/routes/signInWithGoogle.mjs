@@ -14,7 +14,7 @@ dotenv.config();
 
 
 // 1. Trigger the Google Popup
-router.get('/google', passport.authenticate('google', { session: false, prompt: 'select_account' }));
+router.get('/api/google', passport.authenticate('google', { session: false, prompt: 'select_account' }));
 
 
 
@@ -38,7 +38,7 @@ router.get('/api/auth/google/callback',
 
         // 4. Send the token to the frontend via URL parameters
         // We redirect back to a "success" page on your Next.js app
-        res.redirect(`http://localhost:3001/auth-success?token=${token}&name=${req.user.name}&email=${req.user.email}&id=${req.user._id}`);
+        res.redirect(`http://localhost:3001/auth-success?token=${token}&name=${encodeURIComponent(req.user.name)}&email=${req.user.email}&id=${req.user._id}&isOnboarded=${req.user.isOnboarded}`);
     }
 );
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import User from '../mongoose/schemas/users.mjs';
+import { User } from '../mongoose/schemas/users.mjs';
 import { upload } from '../middleware/upload.mjs';
 import { verifyToken } from '../middleware/auth.mjs'; // Your JWT middleware
 
@@ -16,30 +16,43 @@ router.post('/onboard', verifyToken, upload.single('signature'), async (req, res
         // Multer puts the file info in req.file
         const signatureUrl = req.file ? `/uploads/signatures/${req.file.filename}` : '';
 
-        console.log("signatureUrl:", signatureUrl);
+        //console.log("signatureUrl:", signatureUrl, "companyName:", companyName, "address:", address, "phone:", phone);
 
+        //console.log("req.user:", req.user.verified.id);
+        const findUsers = await User.findById(req.user.verified.id);
 
+        console.log("Found User:", findUsers);
+        if (!findUsers) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-        // Update the user's profile in the database
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user.id,
-            {
-                companyName,
-                address,
-                phone,
-                signatureUrl,
-                isOnboarded: true // The Gate is now OPEN
-            },
-            { new: true }
-        );
+        // Update properties directly on the document
+        findUsers.companyName = companyName;
+        findUsers.address = address;
+        findUsers.phone = phone;
+        findUsers.signatureUrl = signatureUrl;
+        findUsers.isOnboarded = true;
+
+        const savedUser = await findUsers.save();
+
+        if (!savedUser) {
+            return res.status(500).json({ message: "Failed to save user profile" });
+        }
 
         res.status(200).json({
             message: "Profile completed successfully",
-            user: updatedUser
+            user: savedUser
         });
+
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error during onboarding" });
+        console.error("Error during onboarding:", error);
+        return res.status(500).json({
+            message: "Server error during onboarding"
+        })
+
+
+
+
     }
 });
 
