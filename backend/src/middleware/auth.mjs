@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import { User } from '../mongoose/schemas/users.mjs';
 
-export const verifyToken = (req, res, next) => {
+export const verifyToken = async (req, res, next) => {
     // 1. Grab the 'Authorization' header from the request
     const authHeader = req.header('Authorization');
 
@@ -14,13 +15,25 @@ export const verifyToken = (req, res, next) => {
         const token = authHeader.split(' ')[1];
 
 
+
         // 4. Verify the token using your secret key from .env
         const verified = jwt.verify(token, process.env.JWT_SECRET);
 
-        // 5. Store the user info in the request so other functions can use it
-        req.user = { ...req.user, verified };
 
-        console.log('Token verified for user:', req.user);
+
+
+        // find user in the database
+        const foundUsers = await User.findById(verified.id);
+        if (!foundUsers) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+
+
+        // 5. Store the user info in the request so other functions can use it
+        req.user = foundUsers;
+
+        // console.log("Authenticated Useer:", req.user);
 
         // 6. Tell Express to move on to the next function (the PDF generator)
         next();

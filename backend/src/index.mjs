@@ -16,6 +16,10 @@ import { generateInvoiceNumber } from './utils/helper.mjs';
 import { verifyToken } from './middleware/auth.mjs';
 
 
+
+
+
+
 // Initialize environment variables
 dotenv.config();
 
@@ -24,7 +28,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+
+// Enable CORS so your Next.js frontend can talk to this API
+// 1. PLACE CORS FIRST
+app.use(cors({
+    origin: 'http://localhost:3001', // Your Frontend Port
+    methods: ['POST', 'GET', 'OPTIONS'],
+    allowedHeaders: ['Content-Type']
+}));
+
+
+
+
+
+
 app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);
@@ -52,61 +69,69 @@ app.get('/', verifyToken, (req, res) => {
 
 
 
-app.post('/api/generate-invoice',
-    checkSchema(invoiceSchema),
+
+
+
+app.post('/api/generate-pdf',
     verifyToken,
     async (req, res) => {
-
-        if (!req.user) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-
-
         try {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({ errors: errors.array() });
-            }
-            const invoiceData = matchedData(req);
-            const subtotal = invoiceData.items.reduce((acc, item) => acc + (item.quantity * item.rate), 0);
-            const tax = subtotal * 0.1;
-            const total = subtotal + tax;
+            // 1. Data comes from req.body (ensure app.use(express.json()) is active)
+            const data = req.body;
 
-            // Save to Database
-            const newInvoice = new Invoice({
-                ...invoiceData,
-                subtotal,
-                tax,
-                total,
-                invoiceNumber: generateInvoiceNumber()
+
+            // 2. Generate the HTML string using the high-end template
+            console.log("Generating HTML with sender as Mayicodes", data);
+
+            const newData = {
+                ...data,
+                sender: {
+                    companyName: req.user.name || "Mayicodes Tech Solutions",
+                    address: req.user.address || "123 Tech Avenue, Silicon Valley, CA",
+                    phone: req.user.phone || "+1 (555) 123-4567",
+                    email: req.user.email || "contact@mayicodes.com"
+                },
+                senderLogoUrl: req.user.signatureUrl || '',
+
+            };
+
+            const htmlContent = generateHTML(newData);
+
+            // 3. Launch Puppeteer
+            const browser = await puppeteer.launch({
+                headless: "new",
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
             });
 
-            console.log('Saving to DB:', newInvoice);
-            const savedInvoice = await newInvoice.save();
-
-            console.log('Saved Invoice:', savedInvoice);
-
-            // 3. Generate PDF (Reuse your existing Puppeteer logic)
-            const browser = await puppeteer.launch({ headless: "new" });
             const page = await browser.newPage();
-            const htmlContent = generateHTML({ ...invoiceData, subtotal, tax, total });
 
-            await page.setContent(htmlContent);
-            const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+            // 4. Set Content (networkidle0 ensures the signature image is fully loaded)
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+            // 5. Create PDF Buffer
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true, // Required to render the background colors and watermark
+                margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+            });
+
             await browser.close();
 
+            // 6. Set Headers and Send Buffer
+            // We use .send() because pdfBuffer is a Buffer object
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename=invoice_${data.meta.invoiceNumber}.pdf`,
+                'Content-Length': pdfBuffer.length
+            });
 
-            // 4. Send PDF
-            res.contentType("application/pdf");
-            res.send(pdfBuffer);
+            return res.status(200).send(pdfBuffer);
 
         } catch (error) {
-            res.status(500).json({ message: "Error generating invoice", error: error.message });
+            console.error('PDF Generation Error:', error);
+            res.status(500).json({ error: 'Failed to generate PDF document' });
         }
     });
-
-
-
 
 // GET: Fetch all invoices
 app.get('/api/invoices', async (req, res) => {

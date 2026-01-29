@@ -29,7 +29,10 @@ router.get('/api/auth/google/callback',
         const token = jwt.sign(
             {
                 id: req.user._id,
-                isVerified: req.user.isVerified,
+                name: req.user.name,
+                email: req.user.email,
+                phone: req.user.phone,
+                companyName: req.user.companyName,
                 isOnboarded: req.user.isOnboarded
             },
             process.env.JWT_SECRET,

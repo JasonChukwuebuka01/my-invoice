@@ -17,11 +17,11 @@ router.post('/onboard', verifyToken, upload.single('signature'), async (req, res
         const signatureUrl = req.file ? `/uploads/signatures/${req.file.filename}` : '';
 
         //console.log("signatureUrl:", signatureUrl, "companyName:", companyName, "address:", address, "phone:", phone);
+        console.log("req.user:", req.user);
 
-        //console.log("req.user:", req.user.verified.id);
-        const findUsers = await User.findById(req.user.verified.id);
+        const findUsers = await User.findById(req.user._id);
 
-        console.log("Found User:", findUsers);
+
         if (!findUsers) {
             return res.status(404).json({ message: "User not found" });
         }
