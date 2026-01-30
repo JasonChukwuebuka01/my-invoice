@@ -32,11 +32,9 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS so your Next.js frontend can talk to this API
 // 1. PLACE CORS FIRST
 app.use(cors({
-    origin: 'http://localhost:3001', // Your Frontend Port
-    methods: ['POST', 'GET', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
+    origin: 'http://localhost:3001',  // Or '*' for any origin (less secure)
+    allowedHeaders: ['Content-Type', 'Authorization']  // Add 'Authorization' here
 }));
-
 
 
 
@@ -56,7 +54,7 @@ app.use(passport.initialize());
 
 
 mongoose.connect("mongodb://localhost/invoicegeneratorapi")
-    .then(() => console.log('✅ Connected to MongoDB...'))
+    .then(() => console.log('✅ Connected to MongoDB....'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 
@@ -76,12 +74,10 @@ app.post('/api/generate-pdf',
     verifyToken,
     async (req, res) => {
         try {
-            // 1. Data comes from req.body (ensure app.use(express.json()) is active)
+
             const data = req.body;
 
 
-            // 2. Generate the HTML string using the high-end template
-            console.log("Generating HTML with sender as Mayicodes", data);
 
             const newData = {
                 ...data,
@@ -94,6 +90,8 @@ app.post('/api/generate-pdf',
                 senderLogoUrl: req.user.signatureUrl || '',
 
             };
+
+
 
             const htmlContent = generateHTML(newData);
 
@@ -125,7 +123,43 @@ app.post('/api/generate-pdf',
                 'Content-Length': pdfBuffer.length
             });
 
+            // Check if invoice number already exists for this user
+            const existingInvoice = await Invoice.findOne({
+                invoiceNumber: meta.invoiceNumber,
+                userId: req.user.id
+            });
+
+            if (existingInvoice) {
+                return res.status(400).json({ message: "Invoice number already exists." });
+            }
+
+            const newInvoice = new Invoice({
+                userId: req.user.id,
+                invoiceNumber: meta.invoiceNumber,
+                client: {
+                    name: billing.clientName,
+                    email: billing.clientEmail,
+                    address: billing.clientAddress
+                },
+                items: items.map(item => ({
+                    ...item,
+                    amount: item.quantity * item.rate
+                })),
+                financials,
+                settlement,
+                status: financials.isPaidInFull ? 'Paid' : 'Sent'
+            });
+
+
+            // Save the invoice to the database
+            const savedInvoice = await newInvoice.save();
+
+            if (!savedInvoice) {
+                return res.status(500).json({ message: "Failed to save invoice to database" });
+            };
             return res.status(200).send(pdfBuffer);
+
+
 
         } catch (error) {
             console.error('PDF Generation Error:', error);
