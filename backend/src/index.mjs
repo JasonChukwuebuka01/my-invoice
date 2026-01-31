@@ -17,9 +17,6 @@ import { verifyToken } from './middleware/auth.mjs';
 
 
 
-
-
-
 // Initialize environment variables
 dotenv.config();
 
@@ -37,9 +34,6 @@ app.use(cors({
 }));
 
 
-
-
-
 app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);
@@ -48,7 +42,6 @@ app.use(userOnboarding);
 
 app.use(passport.initialize());
 //app.use(passport.session());
-
 
 
 
@@ -69,103 +62,123 @@ app.get('/', verifyToken, (req, res) => {
 
 
 
+app.post('/api/generate-pdf', verifyToken, async (req, res) => {
 
-app.post('/api/generate-pdf',
-    verifyToken,
-    async (req, res) => {
-        try {
+    // [FIX 1] Define browser variable outside try block so we can close it in 'finally'
+    let browser;
 
-            const data = req.body;
+    try {
+        const data = req.body;
 
+        // [FIX 2] Destructure these variables so you can use them in the DB query below
+        const { meta, billing, items, financials, settlement } = data;
 
+        // ---------------------------------------------------------
+        // STEP 1: VALIDATION (Check DB First)
+        // ---------------------------------------------------------
 
-            const newData = {
-                ...data,
-                sender: {
-                    companyName: req.user.name || "Mayicodes Tech Solutions",
-                    address: req.user.address || "123 Tech Avenue, Silicon Valley, CA",
-                    phone: req.user.phone || "+1 (555) 123-4567",
-                    email: req.user.email || "contact@mayicodes.com"
-                },
-                senderLogoUrl: req.user.signatureUrl || '',
+        // [FIX 3] Check for duplicate BEFORE starting the heavy PDF generation
+        const existingInvoice = await Invoice.findOne({
+            invoiceNumber: meta.invoiceNumber,
+            userId: req.user.id
+        });
 
-            };
+        if (existingInvoice) {
+            return res.status(400).json({ message: "Invoice number already exists." });
+        }
 
+        // ---------------------------------------------------------
+        // STEP 2: PDF GENERATION
+        // ---------------------------------------------------------
 
+        const newData = {
+            ...data,
+            sender: {
+                companyName: req.user.name || "Mayicodes Tech Solutions",
+                address: req.user.address || "123 Tech Avenue, Silicon Valley, CA",
+                phone: req.user.phone || "+1 (555) 123-4567",
+                email: req.user.email || "contact@mayicodes.com"
+            },
+            senderLogoUrl: req.user.signatureUrl || '',
+        };
 
-            const htmlContent = generateHTML(newData);
+        const htmlContent = generateHTML(newData);
 
-            // 3. Launch Puppeteer
-            const browser = await puppeteer.launch({
-                headless: "new",
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
+        browser = await puppeteer.launch({
+            headless: "new",
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
 
-            const page = await browser.newPage();
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-            // 4. Set Content (networkidle0 ensures the signature image is fully loaded)
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+        });
 
-            // 5. Create PDF Buffer
-            const pdfBuffer = await page.pdf({
-                format: 'A4',
-                printBackground: true, // Required to render the background colors and watermark
-                margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
-            });
-
-            await browser.close();
-
-            // 6. Set Headers and Send Buffer
-            // We use .send() because pdfBuffer is a Buffer object
-            res.set({
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename=invoice_${data.meta.invoiceNumber}.pdf`,
-                'Content-Length': pdfBuffer.length
-            });
-
-            // Check if invoice number already exists for this user
-            const existingInvoice = await Invoice.findOne({
-                invoiceNumber: meta.invoiceNumber,
-                userId: req.user.id
-            });
-
-            if (existingInvoice) {
-                return res.status(400).json({ message: "Invoice number already exists." });
-            }
-
-            const newInvoice = new Invoice({
-                userId: req.user.id,
-                invoiceNumber: meta.invoiceNumber,
-                client: {
-                    name: billing.clientName,
-                    email: billing.clientEmail,
-                    address: billing.clientAddress
-                },
-                items: items.map(item => ({
-                    ...item,
-                    amount: item.quantity * item.rate
-                })),
-                financials,
-                settlement,
-                status: financials.isPaidInFull ? 'Paid' : 'Sent'
-            });
+        // We close the browser immediately after generation
+        await browser.close();
+        browser = null; // Prevent double closing in finally block
 
 
-            // Save the invoice to the database
-            const savedInvoice = await newInvoice.save();
+        // ---------------------------------------------------------
+        // STEP 3: SAVE TO DATABASE
+        // ---------------------------------------------------------
 
-            if (!savedInvoice) {
-                return res.status(500).json({ message: "Failed to save invoice to database" });
-            };
-            return res.status(200).send(pdfBuffer);
+        const newInvoice = new Invoice({
+            userId: req.user.id,
+            invoiceNumber: meta.invoiceNumber, // [FIX 4] Now 'meta' is defined
+            client: {
+                name: billing.clientName, // [FIX 4] Now 'billing' is defined
+                email: billing.clientEmail,
+                address: billing.clientAddress
+            },
+            items: items.map(item => ({
+                ...item,
+                amount: item.quantity * item.rate
+            })),
+            financials,
+            settlement,
+            status: financials.isPaidInFull ? 'Paid' : 'Sent'
+        });
 
+        const savedInvoice = await newInvoice.save();
 
+        if (!savedInvoice) {
+            return res.status(500).json({ message: "Failed to save invoice to database" });
+        }
 
-        } catch (error) {
-            console.error('PDF Generation Error:', error);
+        console.log('Invoice saved with ID:', savedInvoice);
+
+        // ---------------------------------------------------------
+        // STEP 4: SEND RESPONSE
+        // ---------------------------------------------------------
+
+        // [FIX 5] Only set PDF headers if everything else succeeded
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=invoice_${meta.invoiceNumber}.pdf`,
+            'Content-Length': pdfBuffer.length
+        });
+
+        return res.status(200).send(pdfBuffer);
+
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+
+        // Check if headers were already sent to avoid crashing the server
+        if (!res.headersSent) {
             res.status(500).json({ error: 'Failed to generate PDF document' });
         }
-    });
+    } finally {
+        // [FIX 6] Ensure browser closes even if code crashes midway
+        if (browser) {
+            await browser.close();
+        }
+    }
+});
 
 // GET: Fetch all invoices
 app.get('/api/invoices', async (req, res) => {
