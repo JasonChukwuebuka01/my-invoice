@@ -7,6 +7,7 @@ import { invoiceSchema } from './validationSchema/userInvoiceSchema.mjs';
 import signupRouter from './routes/signupRoute.mjs';
 import signInRouter from './routes/signInRoute.mjs';
 import signInWithGoogleRouter from './routes/signInWithGoogle.mjs';
+import invoiceRouter from './routes/invoiceRoute.mjs';
 import userOnboarding from './routes/userOnboarding.mjs';
 import puppeteer from 'puppeteer';
 import { generateHTML } from './utils/pdfTemplate.mjs';
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);
 app.use(signInWithGoogleRouter);
+app.use(invoiceRouter);
 app.use(userOnboarding);
 
 app.use(passport.initialize());
@@ -59,6 +61,18 @@ app.get('/', verifyToken, (req, res) => {
 
 
 
+app.get('/api/review', verifyToken, async (req, res) => {
+
+    const user = {
+        companyName: req.user.companyName,
+        address: req.user.address,
+        phone: req.user.phone,
+
+    };
+
+    res.status(200).json({ user });
+
+});
 
 
 
@@ -179,71 +193,6 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
         }
     }
 });
-
-// GET: Fetch all invoices
-app.get('/api/invoices', async (req, res) => {
-
-    try {
-        const invoices = await Invoice.find().sort({ createdAt: -1 });
-        res.status(200).json(invoices);
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        res.status(500).json({ error: 'Failed to fetch invoices' });
-    }
-});
-
-
-
-
-
-
-
-// GET: Fetch a single invoice by ID
-app.get('/api/invoices/:id', async (req, res) => {
-    try {
-        const invoice = await Invoice.findById(req.params.id);
-
-        if (!invoice) {
-            return res.status(404).json({ error: 'Invoice not found' });
-        }
-
-        res.status(200).json(invoice);
-    } catch (error) {
-        console.error('Error fetching invoice:', error);
-        res.status(500).json({ error: 'Invalid ID or Server Error' });
-    }
-});
-
-
-
-
-// GET: Re-generate PDF for an existing invoice
-app.get('/api/invoices/:id/download', async (req, res) => {
-    try {
-        const invoice = await Invoice.findById(req.params.id);
-        if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-
-        const browser = await puppeteer.launch({ headless: "new" });
-        const page = await browser.newPage();
-
-        // We pass the invoice data from MongoDB into our HTML template
-        const htmlContent = generateHTML(invoice);
-
-        await page.setContent(htmlContent);
-        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        await browser.close();
-
-        res.contentType("application/pdf");
-        // This header forces the browser to download the file with a specific name
-        res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoice.invoiceNumber}.pdf`);
-        res.send(pdfBuffer);
-
-    } catch (error) {
-        res.status(500).json({ error: 'Error generating PDF' });
-    }
-});
-
-
 
 
 

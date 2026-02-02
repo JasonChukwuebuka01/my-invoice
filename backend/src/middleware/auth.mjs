@@ -33,9 +33,7 @@ export const verifyToken = async (req, res, next) => {
         // 5. Store the user info in the request so other functions can use it
         req.user = foundUsers;
 
-        // console.log("Authenticated Useer:", req.user);
-
-        // 6. Tell Express to move on to the next function (the PDF generator)
+        // 6. Move to the next middleware or route handler
         next();
 
     } catch (err) {

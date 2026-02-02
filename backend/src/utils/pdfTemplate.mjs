@@ -10,15 +10,15 @@ export const generateHTML = (data) => {
     signatureUrl // Your signature image
   } = data;
 
-  
-  
+
+
   // Helper to format money
   const formatCurrency = (amount) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
   // Status Logic
   const isPaid = financials.balanceDue <= 0;
-  const statusColor = isPaid ? "#059669" : "#0F172A"; 
+  const statusColor = isPaid ? "#059669" : "#0F172A";
 
   return `
     <!DOCTYPE html>
@@ -217,10 +217,10 @@ export const generateHTML = (data) => {
           <div>
             <span class="label">Authorized Signature</span>
             ${signatureUrl
-              ? `<img src="${signatureUrl}" class="sig-img" />`
-              : `<div class="sig-placeholder"></div>`
-            }
-            <div class="t-label" style="color:#0F172A;">Mayicodes</div>
+      ? `<img src="${signatureUrl}" class="sig-img" />`
+      : `<div class="sig-placeholder">pssst</div>`
+    }
+            <div class="t-label" style="color:#0F172A;">${sender.companyName}</div>
           </div>
           <div>
             <span class="label">Verified Document</span>
