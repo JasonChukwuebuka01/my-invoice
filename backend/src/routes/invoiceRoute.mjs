@@ -24,6 +24,40 @@ router.get('/api/invoices', async (req, res) => {
 
 
 
+// 'protect' is your middleware that verifies the user is logged in
+router.get('/api/invoices/recent', verifyToken, async (req, res) => {
+    try {
+        // 1. Get the ID of the logged-in user from the request object
+        const userId = req.user.id;
+
+        // 2. ONLY fetch invoices where the userId matches
+        const invoices = await Invoice.find({ userId: userId })
+            .sort({ createdAt: -1 })
+            .limit(5);
+       
+        res.status(200).json(invoices);
+    } catch (error) {
+        res.status(500).json({ message: "Could not retrieve your invoices." });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // GET: Fetch a single invoice by ID
 router.get('/api/invoices/:id',
