@@ -34,22 +34,20 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']  // Add 'Authorization' here
 }));
 
-
 app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);
 app.use(signInWithGoogleRouter);
 app.use(invoiceRouter);
 app.use(userOnboarding);
-
 app.use(passport.initialize());
-//app.use(passport.session());
+
 
 
 
 
 mongoose.connect("mongodb://localhost/invoicegeneratorapi")
-    .then(() => console.log('✅ Connected to MongoDB...'))
+    .then(() => console.log('✅ Connected to MongoDB....'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 
@@ -164,11 +162,7 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
             return res.status(500).json({ message: "Failed to save invoice to database" });
         }
 
-        console.log('Invoice saved with ID:', savedInvoice);
-
-        // ---------------------------------------------------------
-        // STEP 4: SEND RESPONSE
-        // ---------------------------------------------------------
+      
 
         // [FIX 5] Only set PDF headers if everything else succeeded
         res.set({

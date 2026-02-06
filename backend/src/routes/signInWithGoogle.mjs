@@ -24,16 +24,11 @@ router.get('/api/auth/google/callback',
 
     (req, res) => {
 
-        console.log('User authenticated via Google:', req.user);
+
         // 3. Success! Generate a JWT just like your regular login
         const token = jwt.sign(
             {
                 id: req.user._id,
-                name: req.user.name,
-                email: req.user.email,
-                phone: req.user.phone,
-                companyName: req.user.companyName,
-                isOnboarded: req.user.isOnboarded
             },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }

@@ -58,10 +58,6 @@ router.get('/api/invoices/recent', verifyToken, async (req, res) => {
 
 
 
-
-
-
-
 // GET: Fetch a single invoice by ID
 router.get('/api/invoices/:id',
     verifyToken,
@@ -171,7 +167,7 @@ router.get('/stats', verifyToken, async (req, res) => {
             overdueAmount: 0,
             totalCount: 0
         };
-        console.log("Dashboard stats:", result);
+
 
         res.status(200).json(result);
     } catch (error) {
@@ -185,6 +181,108 @@ router.get('/stats', verifyToken, async (req, res) => {
 
 
 
+
+
+
+
+
+// GET /api/invoices/revenue-history
+router.get('/daily-revenue', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // 1. Calculate the date for exactly 7 days ago
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const history = await Invoice.aggregate([
+            {
+                $match: {
+                    userId: new mongoose.Types.ObjectId(userId),
+                    status: "Paid",
+                    // Only get invoices from the last week
+                    issuedDate: { $gte: sevenDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        // Group by the specific day of the year to keep them unique
+                        dayOfWeek: { $dayOfWeek: "$issuedDate" },
+                        date: { $dateToString: { format: "%Y-%m-%d", date: "$issuedDate" } }
+                    },
+                    revenue: { $sum: "$financials.totalGross" }
+                }
+            },
+            // Sort by the actual date string so they appear in order (Mon -> Tue -> Wed)
+            { $sort: { "_id.date": 1 } }
+        ]);
+
+        // 2. Map day numbers (1-7) to Names
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        const formattedData = history.map(item => ({
+            name: dayNames[item._id.dayOfWeek - 1],
+            revenue: item.revenue
+        }));
+
+        res.json(formattedData);
+    } catch (error) {
+        console.error("Daily Chart Error:", error);
+        res.status(500).json({ message: "Error fetching daily trends" });
+    }
+});
+
+
+
+
+
+
+
+// GET /api/invoices/activity
+router.get('/activity', verifyToken, async (req, res) => {
+    try {
+        const activities = await Invoice.find({ userId: req.user.id })
+            .sort({ updatedAt: -1 }) // Get the most recently changed ones
+            .limit(4)
+            .select('invoiceNumber client status updatedAt financials.totalGross');
+
+        res.json(activities);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to load activity feed" });
+    }
+});
+
+
+
+
+
+
+
+
+// PATCH /api/invoices/:id/pay
+router.patch('/:id/pay', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Find the invoice AND ensure it belongs to this user (Security!)
+        const invoice = await Invoice.findOneAndUpdate(
+            { _id: id, userId: userId },
+            { $set: { status: 'Paid' } },
+            { new: true } // This returns the updated document
+        );
+
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice not found or unauthorized" });
+        }
+
+        res.json({ message: "Payment recorded successfully", invoice });
+    } catch (error) {
+        console.error("Payment Update Error:", error);
+        res.status(500).json({ message: "Server error during payment update" });
+    }
+});
 
 
 
