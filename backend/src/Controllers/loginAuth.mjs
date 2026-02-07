@@ -11,13 +11,16 @@ export const login = async (req, res) => {
 
         // 1. Find the user in the "Vault" (MongoDB)
         const user = await User.findOne({ email });
+
         if (!user) {
             return res.status(401).json({ message: "Invalid Email. Are you sure you signed up first?" });
         }
 
         // 2. The Bcrypt Handshake
         // This compares the plain text password with the hashed one in the DB
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = bcrypt.compareSync(password, user.password);
+
+        console.log("confirming password", isMatch)
 
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid Password. Is password Correct?" });
@@ -28,10 +31,6 @@ export const login = async (req, res) => {
         const token = jwt.sign(
             {
                 id: req.user._id,
-                name: req.user.name,
-                email: req.user.email,
-                companyName: req.user.companyName,
-                isOnboarded: req.user.isOnboarded
             },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }

@@ -2,6 +2,9 @@ import { Router } from "express";
 import { verifyToken } from "../middleware/auth.mjs";
 import { Invoice } from "../mongoose/schemas/invoice.mjs";
 import mongoose from "mongoose";
+import { generateHTML2 } from "../utils/pdfTemplate2.mjs";
+import puppeteer from 'puppeteer';
+
 
 
 const router = Router();
@@ -99,31 +102,62 @@ router.get('/api/invoices/:id',
 
 
 // GET: Re-generate PDF for an existing invoice
-router.get('/api/invoices/:id/download', async (req, res) => {
-    try {
-        const invoice = await Invoice.findById(req.params.id);
-        if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
+router.get('/api/invoices/:id/download',
+    verifyToken,
+    async (req, res) => {
+        let browser = null; // Declare browser outside to handle it in finally block
+        try {
+            // [SECURITY FIX]: Ensure the user can only download THEIR OWN invoice
+            const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.user.id });
 
-        const browser = await puppeteer.launch({ headless: "new" });
-        const page = await browser.newPage();
+            if (!invoice) return res.status(404).json({ error: 'Invoice not found or unauthorized' });
 
-        // We pass the invoice data from MongoDB into our HTML template
-        const htmlContent = generateHTML(invoice);
+            const newData = {
+                ...invoice.toObject(), // Convert Mongoose doc to plain JS object
+                sender: {
+                    companyName: req.user.name || "Mayicodes Tech Solutions",
+                    address: req.user.address || "123 Tech Avenue, Silicon Valley, CA",
+                    phone: req.user.phone || "+1 (555) 123-4567",
+                    email: req.user.email || "contact@mayicodes.com"
+                },
+                senderLogoUrl: req.user.signatureUrl || '',
+            };
 
-        await page.setContent(htmlContent);
-        const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
-        await browser.close();
+            console.log(newData);
+            const htmlContent = generateHTML2(newData);
 
-        res.contentType("application/pdf");
-        // This header forces the browser to download the file with a specific name
-        res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoice.invoiceNumber}.pdf`);
-        res.send(pdfBuffer);
+            browser = await puppeteer.launch({
+                headless: "new",
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
 
-    } catch (error) {
-        res.status(500).json({ error: 'Error generating PDF' });
-    }
-});
+            const page = await browser.newPage();
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+            });
+
+            // Set PDF headers - using invoice.invoiceNumber correctly
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename=invoice_${invoice.invoiceNumber}.pdf`,
+                'Content-Length': pdfBuffer.length
+            });
+
+            return res.status(200).send(pdfBuffer);
+
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            res.status(500).json({ error: 'Error generating PDF' });
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+        }
+    });
 
 
 
@@ -284,6 +318,35 @@ router.patch('/:id/pay', verifyToken, async (req, res) => {
     }
 });
 
+
+
+
+
+
+
+
+// DELETE /api/invoices/:id
+router.delete('/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Security Check: Only delete if the invoice belongs to the logged-in user
+        const invoice = await Invoice.findOneAndDelete({
+            _id: id,
+            userId: userId
+        });
+
+        if (!invoice) {
+            return res.status(404).json({ message: "Invoice not found or unauthorized" });
+        }
+
+        res.json({ message: "Invoice deleted successfully" });
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(500).json({ message: "Server error during deletion" });
+    }
+});
 
 
 export default router;

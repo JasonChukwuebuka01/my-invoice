@@ -141,9 +141,9 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
 
         const newInvoice = new Invoice({
             userId: req.user.id,
-            invoiceNumber: meta.invoiceNumber, // [FIX 4] Now 'meta' is defined
+            invoiceNumber: meta.invoiceNumber, 
             client: {
-                name: billing.clientName, // [FIX 4] Now 'billing' is defined
+                name: billing.clientName, 
                 email: billing.clientEmail,
                 address: billing.clientAddress
             },

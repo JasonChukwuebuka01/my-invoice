@@ -1,18 +1,19 @@
-export const generateHTML = (data) => {
-  // Destructure all incoming data
-  const {
-    meta,
-    sender,      // Your details
-    billing,     // Client details
-    items,       // The list of services
-    financials,  // Subtotal, Tax, Total, Paid, Balance
-    settlement,  // Bank/Crypto instructions
-    signatureUrl // Your signature image
-  } = data;
+export const generateHTML2 = (data) => {
+    // Destructure all incoming data
+    const {
+        client,
+        financials,
+        settlement,
+        invoiceNumber,
+        items,
+        sender,
+        issuedDate,
+        senderLogoUrl
+    } = data;
 
 
 
-  // Helper to format money
+
     // Nigerian Naira Formatter Logic
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-NG', {
@@ -23,17 +24,16 @@ export const generateHTML = (data) => {
     };
 
 
-    
-  // Status Logic
-  const isPaid = financials.balanceDue <= 0;
-  const statusColor = isPaid ? "#059669" : "#0F172A";
+    // Status Logic
+    const isPaid = financials.balanceDue <= 0;
+    const statusColor = isPaid ? "#059669" : "#0F172A";
 
-  return `
+    return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8" />
-      <title>Invoice ${meta.invoiceNumber}</title>
+      <title>Invoice ${invoiceNumber}</title>
       <style>
         /* A4 SETTINGS */
         @page { size: A4; margin: 0; }
@@ -135,21 +135,20 @@ export const generateHTML = (data) => {
           </div>
           <div class="title-block">
             <h1 class="invoice-title">Invoice</h1>
-            <span class="invoice-badge">${meta.invoiceNumber}</span>
+            <span class="invoice-badge">${invoiceNumber}</span>
           </div>
         </div>
 
         <div class="info-grid">
           <div>
             <span class="label">Billed To</span>
-            <div class="client-name">${billing.clientName}</div>
-            ${billing.clientAddress ? `<div class="client-detail">${billing.clientAddress}</div>` : ''}
-            ${billing.clientPhone ? `<div class="client-detail">${billing.clientPhone}</div>` : ''}
-            <div class="client-detail">${billing.clientEmail}</div>
+            <div class="client-name">${client.name}</div>
+            ${client.address ? `<div class="client-detail">${client.address}</div>` : ''}
+            <div class="client-detail">${client.email}</div>
           </div>
           <div style="text-align: right;">
             <span class="label">Information</span>
-            <div class="date-val">Issued: ${billing.issuedDate}</div>
+            <div class="date-val">Issued: ${new Date(issuedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
 
           </div>
         </div>
@@ -224,10 +223,10 @@ export const generateHTML = (data) => {
         <div class="footer">
           <div>
             <span class="label">Authorized Signature</span>
-            ${signatureUrl
-      ? `<img src="${signatureUrl}" class="sig-img" />`
-      : `<div class="sig-placeholder">pssst</div>`
-    }
+            ${senderLogoUrl
+            ? `<img src="${senderLogoUrl}" class="sig-img" />`
+            : `<div class="sig-placeholder">pssst</div>`
+        }
             <div class="t-label" style="color:#0F172A;">${sender.companyName}</div>
           </div>
           <div>
