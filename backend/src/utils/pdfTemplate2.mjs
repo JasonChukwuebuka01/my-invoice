@@ -109,7 +109,7 @@ export const generateHTML2 = (data) => {
         /* Totals */
         .totals-box { width: 38%; text-align: right; }
         .total-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
-        .t-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94A3B8; }
+        .t-label {margin-right:10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94A3B8; }
         .t-value { font-size: 14px; font-weight: 700; color: #0F172A; }
         .grand-total { margin-top: 25px; padding-top: 25px; border-top: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: flex-end; }
         .balance-val { font-size: 48px; font-weight: 800; letter-spacing: -2px; line-height: 0.8; font-style: italic; color: ${statusColor}; }

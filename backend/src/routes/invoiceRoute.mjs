@@ -101,14 +101,22 @@ router.get('/api/invoices/:id',
 
 
 
+
 // GET: Re-generate PDF for an existing invoice
 router.get('/api/invoices/:id/download',
+
     verifyToken,
     async (req, res) => {
         let browser = null; // Declare browser outside to handle it in finally block
         try {
             // [SECURITY FIX]: Ensure the user can only download THEIR OWN invoice
             const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.user.id });
+
+            console.log("Params", req.params.id)
+
+            console.log(req.user.id)
+
+            console.log("checking invoice rn", invoice)
 
             if (!invoice) return res.status(404).json({ error: 'Invoice not found or unauthorized' });
 
@@ -123,7 +131,7 @@ router.get('/api/invoices/:id/download',
                 senderLogoUrl: req.user.signatureUrl || '',
             };
 
-            console.log(newData);
+            //console.log(newData);
             const htmlContent = generateHTML2(newData);
 
             browser = await puppeteer.launch({
