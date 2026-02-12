@@ -12,16 +12,21 @@ const router = Router();
 
 
 // GET: Fetch all invoices
-router.get('/api/invoices', async (req, res) => {
+router.get('/api/invoices',
+    verifyToken,
+    async (req, res) => {
 
-    try {
-        const invoices = await Invoice.find().sort({ createdAt: -1 });
-        res.status(200).json(invoices);
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        res.status(500).json({ error: 'Failed to fetch invoices' });
-    }
-});
+        const userId = req.user.id;
+
+        try {
+            const invoices = await Invoice.find({ userId: userId })
+                .sort({ createdAt: -1 });
+            res.status(200).json(invoices);
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+            res.status(500).json({ error: 'Failed to fetch invoices' });
+        }
+    });
 
 
 
@@ -100,7 +105,7 @@ router.get('/api/invoices/:id',
 
 
 
-    
+
 
 
 // GET: Re-generate PDF for an existing invoice
