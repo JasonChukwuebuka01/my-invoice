@@ -1,34 +1,35 @@
 export const generateHTML2 = (data) => {
-    // Destructure all incoming data
-    const {
-        client,
-        financials,
-        settlement,
-        invoiceNumber,
-        items,
-        sender,
-        issuedDate,
-        senderLogoUrl
-    } = data;
+  // Destructure all incoming data
+  const {
+    client,
+    financials,
+    settlement,
+    invoiceNumber,
+    items,
+    sender,
+    updatedAt,
+    senderLogoUrl,
+
+  } = data;
 
 
 
 
-    // Nigerian Naira Formatter Logic
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            minimumFractionDigits: 2,
-        }).format(amount);
-    };
+  // Nigerian Naira Formatter Logic
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
 
-    // Status Logic
-    const isPaid = financials.balanceDue <= 0;
-    const statusColor = isPaid ? "#059669" : "#0F172A";
+  // Status Logic
+  const isPaid = financials.balanceDue <= 0;
+  const statusColor = isPaid ? "#059669" : "#0F172A";
 
-    return `
+  return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -148,7 +149,7 @@ export const generateHTML2 = (data) => {
           </div>
           <div style="text-align: right;">
             <span class="label">Information</span>
-            <div class="date-val">Issued: ${new Date(issuedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            <div class="date-val">Issued: ${new Date(updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
 
           </div>
         </div>
@@ -224,9 +225,9 @@ export const generateHTML2 = (data) => {
           <div>
             <span class="label">Authorized Signature</span>
             ${senderLogoUrl
-            ? `<img src="${senderLogoUrl}" class="sig-img" />`
-            : `<div class="sig-placeholder">pssst</div>`
-        }
+      ? `<img src="${senderLogoUrl}" class="sig-img" />`
+      : `<div class="sig-placeholder">pssst</div>`
+    }
             <div class="t-label" style="color:#0F172A;">${sender.companyName}</div>
           </div>
           <div>

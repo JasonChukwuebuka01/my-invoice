@@ -47,7 +47,7 @@ app.use(passport.initialize());
 
 
 mongoose.connect("mongodb://localhost/invoicegeneratorapi")
-    .then(() => console.log('✅ Connected to MongoDB....'))
+    .then(() => console.log('✅ Connected to MongoDB.....'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 

@@ -113,16 +113,10 @@ router.get('/api/invoices/:id/download',
 
     verifyToken,
     async (req, res) => {
-        let browser = null; // Declare browser outside to handle it in finally block
+        let browser = null;
         try {
-            // [SECURITY FIX]: Ensure the user can only download THEIR OWN invoice
+
             const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.user.id });
-
-            console.log("Params", req.params.id)
-
-            console.log(req.user.id)
-
-            console.log("checking invoice rn", invoice)
 
             if (!invoice) return res.status(404).json({ error: 'Invoice not found or unauthorized' });
 
@@ -137,7 +131,8 @@ router.get('/api/invoices/:id/download',
                 senderLogoUrl: req.user.signatureUrl || '',
             };
 
-            //console.log(newData);
+
+
             const htmlContent = generateHTML2(newData);
 
             browser = await puppeteer.launch({
@@ -309,23 +304,36 @@ router.get('/activity', verifyToken, async (req, res) => {
 
 
 // PATCH /api/invoices/:id/pay
-router.patch('/:id/pay', verifyToken, async (req, res) => {
+router.patch('/api/invoices/:id/pay', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
 
-        // Find the invoice AND ensure it belongs to this user (Security!)
-        const invoice = await Invoice.findOneAndUpdate(
-            { _id: id, userId: userId },
-            { $set: { status: 'Paid' } },
-            { new: true } // This returns the updated document
-        );
+        const invoice = await Invoice.findOne({ _id: id, userId: userId });
 
         if (!invoice) {
             return res.status(404).json({ message: "Invoice not found or unauthorized" });
         }
 
-        res.json({ message: "Payment recorded successfully", invoice });
+
+        invoice.status = 'Paid';
+        invoice.financials.amountPaid = invoice.financials.totalGross;
+        invoice.financials.balanceDue = 0;
+
+        try {
+            const savedInvoice = await invoice.save();
+
+            if (!savedInvoice) {
+                throw new Error("Error saving data in Database");
+            };
+
+            res.json({ message: "Payment recorded successfully", invoice });
+
+        } catch (err) {
+            res.status(400).json({ message: err })
+        };
+
+
     } catch (error) {
         console.error("Payment Update Error:", error);
         res.status(500).json({ message: "Server error during payment update" });
@@ -338,9 +346,8 @@ router.patch('/:id/pay', verifyToken, async (req, res) => {
 
 
 
-
 // DELETE /api/invoices/:id
-router.delete('/:id', verifyToken, async (req, res) => {
+router.delete('/api/invoices/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
