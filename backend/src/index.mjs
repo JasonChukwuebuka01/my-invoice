@@ -58,6 +58,16 @@ app.get('/', verifyToken, (req, res) => {
 });
 
 
+app.get('/api/confirm/user', verifyToken, (req, res) => {
+
+    const userDetails = {
+        name: req.user.name,
+        email: req.user.email,
+        isOnboarded: req.user.isOnboarded
+    }
+    res.status(200).json({ userDetails });
+});
+
 
 app.get('/api/review', verifyToken, async (req, res) => {
 
@@ -141,9 +151,9 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
 
         const newInvoice = new Invoice({
             userId: req.user.id,
-            invoiceNumber: meta.invoiceNumber, 
+            invoiceNumber: meta.invoiceNumber,
             client: {
-                name: billing.clientName, 
+                name: billing.clientName,
                 email: billing.clientEmail,
                 address: billing.clientAddress
             },
@@ -162,7 +172,7 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
             return res.status(500).json({ message: "Failed to save invoice to database" });
         }
 
-      
+
 
         // [FIX 5] Only set PDF headers if everything else succeeded
         res.set({
