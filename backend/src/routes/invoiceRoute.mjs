@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { verifyToken } from "../middleware/auth.mjs";
 import { Invoice } from "../mongoose/schemas/invoice.mjs";
+import { User } from "../mongoose/schemas/users.mjs"
 import mongoose from "mongoose";
 import { generateHTML2 } from "../utils/pdfTemplate2.mjs";
 import puppeteer from 'puppeteer';
+import bcrypt from "bcryptjs";
 
 
 
@@ -368,6 +370,114 @@ router.delete('/api/invoices/:id', verifyToken, async (req, res) => {
         res.status(500).json({ message: "Server error during deletion" });
     }
 });
+
+
+
+
+
+
+
+// PATCH: Update Profile (Overwrites onboarding data + adds new settings)
+router.patch('/invoice/api/settings/update', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.id; // From your JWT middleware
+
+        // Fields coming from your new Settings Page
+        const {
+            name,
+            companyName,
+            address,
+            phone,
+            signatureUrl,
+            currency,
+            defaultTax,
+            brandColor,
+            bankDetails
+        } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    name,
+                    companyName,
+                    address,
+                    phone,
+                    signatureUrl,
+                    currency,
+                    defaultTax,
+                    brandColor,
+                    bankDetails
+                }
+            },
+            { new: true, runValidators: true } // Returns the updated document
+        ).select('-password'); // Never send password back
+
+        if (!updatedUser) {
+            return res.status(404).json({ type: 'API_ERROR', message: "User not found" });
+        }
+
+        res.json({
+            message: "Profile updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ type: 'SERVER_ERROR', message: "Internal server error" });
+    }
+});
+
+
+
+
+
+
+
+
+
+// PATCH: Change Password
+router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const user = await User.findById(req.user.id);
+
+
+
+        // 1. Verify Old Password
+        const isMatch = await bcrypt.compare(String(oldPassword), String(user.password));
+        console.log(req.body)
+        console.log(isMatch);
+        if (!isMatch) {
+            return res.status(400).json({ type: 'VALIDATION_ERROR', message: 'Current password is incorrect' });
+        };
+
+
+
+
+        // 2. Hash New Password
+        const salt = await bcrypt.genSalt(10);
+
+        user.password = await bcrypt.hash(newPassword, salt);
+
+        try {
+            await user.save();
+
+            res.json({ message: "Password updated successfully" });
+
+        } catch (err) {
+
+            res.status(500).json({ type: 'SERVER_ERROR', message: "Failed" });
+        }
+
+
+    } catch (error) {
+        res.status(500).json({ type: 'SERVER_ERROR', message: "Failed to update password" });
+    }
+});
+
+
+
 
 
 export default router;
