@@ -75,7 +75,9 @@ app.get('/api/review', verifyToken, async (req, res) => {
         companyName: req.user.companyName,
         address: req.user.address,
         phone: req.user.phone,
-
+        currency: req.user.currency,
+        bankDetails: req.user.bankDetails,
+        defaultTax: req.user.defaultTax
     };
 
     res.status(200).json({ user });
