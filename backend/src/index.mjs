@@ -54,7 +54,20 @@ mongoose.connect("mongodb://localhost/invoicegeneratorapi")
 
 
 app.get('/', verifyToken, (req, res) => {
-    res.send('Invoice Generator API is running');
+
+
+    const user = {
+        name: req.user.name,
+        currency: req.user.currency,
+        defaultTax: req.user.defaultTax,
+        bankDetails: req.user.bankDetails,
+        companyName: req.user.companyName,
+        address: req.user.address,
+        phone: req.user.phone,
+        signatureUrl: req.user.signatureUrl
+    };
+
+    res.status(200).json({ user });
 });
 
 
@@ -63,7 +76,7 @@ app.get('/api/confirm/user', verifyToken, (req, res) => {
     const userDetails = {
         name: req.user.name,
         email: req.user.email,
-        isOnboarded: req.user.isOnboarded
+        currency: req.user.currency,
     }
     res.status(200).json({ userDetails });
 });

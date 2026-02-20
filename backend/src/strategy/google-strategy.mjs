@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import {User} from '../mongoose/schemas/users.mjs';
+import { User } from '../mongoose/schemas/users.mjs';
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -9,7 +9,7 @@ passport.use(new GoogleStrategy({
     scope: ['profile', 'email']
 },
     async (accessToken, refreshToken, profile, done) => {
-        
+
         try {
             // 1. Check if user already exists in our 'Vault'
             let user = await User.findOne({
@@ -39,7 +39,8 @@ passport.use(new GoogleStrategy({
                 name: profile.displayName,
                 email: profile.emails[0].value,
                 googleId: profile.id,
-                isVerified: true // Google emails are pre-verified
+                isVerified: true,// Google emails are pre-verified
+                currency: "NGN"
             });
 
             const savedUser = await user.save();
