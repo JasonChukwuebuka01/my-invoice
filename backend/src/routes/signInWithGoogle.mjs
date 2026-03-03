@@ -20,23 +20,39 @@ router.get('/api/google', passport.authenticate('google', { session: false, prom
 
 // 2. The Callback (Where Google sends the user back)
 router.get('/api/auth/google/callback',
-    passport.authenticate('google', { session: false }),
-
+    passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:3001/sign-in' }),
     (req, res) => {
+        try {
+            // 1. Generate the JWT (using the user object from Passport)
+            const token = jwt.sign(
+                { id: req.user._id },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
 
+            // 2. BAKE THE COOKIE 
+            // This happens before the redirect
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: false, // Set to true only in production (HTTPS)
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                path: '/',
+            });
 
-        // 3. Success! Generate a JWT just like your regular login
-        const token = jwt.sign(
-            {
-                id: req.user._id,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
-        );
+           
+            const name = encodeURIComponent(req.user.name);
+            const email = req.user.email;
+            const id = req.user._id;
+            const onboarded = req.user.isOnboarded;
 
-        // 4. Send the token to the frontend via URL parameters
-        // We redirect back to a "success" page on your Next.js app
-        res.redirect(`http://localhost:3001/auth-success?token=${token}&name=${encodeURIComponent(req.user.name)}&email=${req.user.email}&id=${req.user._id}&isOnboarded=${req.user.isOnboarded}`);
+            // Redirect to a clean success URL
+            res.redirect(`http://localhost:3001/auth-success?name=${name}&email=${email}&id=${id}&isOnboarded=${onboarded}`);
+
+        } catch (error) {
+            console.error("Google Auth Error:", error);
+            res.redirect('http://localhost:3001/sign-in?error=auth_failed');
+        }
     }
 );
 

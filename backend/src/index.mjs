@@ -15,6 +15,7 @@ import mongoose from 'mongoose';
 import { Invoice } from './mongoose/schemas/invoice.mjs';
 import { generateInvoiceNumber } from './utils/helper.mjs';
 import { verifyToken } from './middleware/auth.mjs';
+import cookieParser from 'cookie-parser';   
 
 
 
@@ -27,13 +28,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 
+
+
 // Enable CORS so your Next.js frontend can talk to this API
 // 1. PLACE CORS FIRST
 app.use(cors({
-    origin: 'http://localhost:3001',  // Or '*' for any origin (less secure)
+    origin: 'http://localhost:3001',
+    credentials: true,  // Or '*' for any origin (less secure)
     allowedHeaders: ['Content-Type', 'Authorization']  // Add 'Authorization' here
 }));
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(signupRouter);
 app.use(signInRouter);

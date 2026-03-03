@@ -1,9 +1,6 @@
-
 import jwt from 'jsonwebtoken';
 import { User } from '../mongoose/schemas/users.mjs';
 import bcrypt from 'bcryptjs';
-
-
 
 export const login = async (req, res) => {
     try {
@@ -13,33 +10,40 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ message: "Invalid Email. Are you sure you signed up first?" });
+            return res.status(401).json({ 
+                message: "Invalid Email. Are you sure you signed up first?" 
+            });
         }
 
-        // 2. The Bcrypt Handshake
-        // This compares the plain text password with the hashed one in the DB
+        // 2. Verify Password
         const isMatch = bcrypt.compareSync(password, user.password);
 
-        console.log("confirming password", isMatch)
-
         if (!isMatch) {
-            return res.status(401).json({ message: "Invalid Password. Is password Correct?" });
+            return res.status(401).json({ 
+                message: "Invalid Password. Is password Correct?" 
+            });
         }
 
-        // 3. Create the Badge (JWT)
-        // We include the ID and the verification status in the badge
+        // 3. Create the JWT Token
         const token = jwt.sign(
-            {
-                id: req.user._id,
-            },
+            { id: user._id }, 
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '7d' } 
         );
 
-        // 4. Send the response back to mayicodes frontend
+        // 4. SET THE HTTP-ONLY COOKIE 
+        // This is the key change. The browser will handle this automatically.
+        res.cookie('token', token, {
+            httpOnly: true,                                  // Security: JS cannot read this
+            secure: process.env.NODE_ENV === 'production',   // HTTPS only in production
+            sameSite: 'lax',                                 // CSRF protection
+            maxAge: 7 * 24 * 60 * 60 * 1000,                 // 7 days in milliseconds
+            path: '/',                                       // Available to all routes
+        });
+
+        // 5. Send the response WITHOUT the token in the JSON body
         res.status(200).json({
             message: "Login successful",
-            token,
             user: {
                 id: user._id,
                 name: user.name,
@@ -50,6 +54,7 @@ export const login = async (req, res) => {
                 phone: user.phone,
                 signatureUrl: user.signatureUrl,
                 createdAt: user.createdAt,
+                hasPassword: !!user.password // Helper for your Settings page logic
             }
         });
 
