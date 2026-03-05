@@ -20,7 +20,8 @@ passport.use(new GoogleStrategy({
                 // 2. If user exists but doesn't have a googleId, link them!
                 if (!user.googleId) {
                     user.googleId = profile.id;
-                    user.isVerified = true; // Mark as verified since Google verified the email 
+                    user.isVerified = true;
+                    user.hasPassword = !!user.password;  
                     await user.save();
                 }
                 return done(null, user);

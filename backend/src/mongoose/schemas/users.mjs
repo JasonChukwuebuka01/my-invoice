@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: function () { return !this.googleId; } },
+    hasPassword: { type: Boolean, default: false }, // New field to track if user has a password set
     googleId: { type: String, unique: true, sparse: true },
     isVerified: { type: Boolean, default: false },
 
