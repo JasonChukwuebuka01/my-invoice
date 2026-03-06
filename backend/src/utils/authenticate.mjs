@@ -1,7 +1,0 @@
-export const checkAuthenticate = (req, res, next) => {
-    if (req.user) {
-        return next();
-    }
-
-    return res.redirect('/api/login');
-}

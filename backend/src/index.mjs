@@ -2,8 +2,6 @@ import express from 'express';
 import passport from 'passport';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { checkSchema, matchedData, validationResult } from 'express-validator';
-import { invoiceSchema } from './validationSchema/userInvoiceSchema.mjs';
 import signupRouter from './routes/signupRoute.mjs';
 import signInRouter from './routes/signInRoute.mjs';
 import signInWithGoogleRouter from './routes/signInWithGoogle.mjs';
@@ -13,9 +11,8 @@ import puppeteer from 'puppeteer';
 import { generateHTML } from './utils/pdfTemplate.mjs';
 import mongoose from 'mongoose';
 import { Invoice } from './mongoose/schemas/invoice.mjs';
-import { generateInvoiceNumber } from './utils/helper.mjs';
 import { verifyToken } from './middleware/auth.mjs';
-import cookieParser from 'cookie-parser';   
+import cookieParser from 'cookie-parser';
 
 
 
@@ -69,7 +66,8 @@ app.get('/', verifyToken, (req, res) => {
         companyName: req.user.companyName,
         address: req.user.address,
         phone: req.user.phone,
-        signatureUrl: req.user.signatureUrl
+        signatureUrl: req.user.signatureUrl,
+        hasPassword: !!req.user.password
     };
 
     res.status(200).json({ user });
@@ -112,14 +110,9 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
     try {
         const data = req.body;
 
-        // [FIX 2] Destructure these variables so you can use them in the DB query below
+
         const { meta, billing, items, financials, settlement } = data;
 
-        // ---------------------------------------------------------
-        // STEP 1: VALIDATION (Check DB First)
-        // ---------------------------------------------------------
-
-        // [FIX 3] Check for duplicate BEFORE starting the heavy PDF generation
         const existingInvoice = await Invoice.findOne({
             invoiceNumber: meta.invoiceNumber,
             userId: req.user.id
@@ -129,9 +122,7 @@ app.post('/api/generate-pdf', verifyToken, async (req, res) => {
             return res.status(400).json({ message: "Invoice number already exists." });
         }
 
-        // ---------------------------------------------------------
-        // STEP 2: PDF GENERATION
-        // ---------------------------------------------------------
+
 
         const newData = {
             ...data,

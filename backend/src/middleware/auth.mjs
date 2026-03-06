@@ -16,6 +16,7 @@ export const verifyToken = async (req, res, next) => {
         token = req.header('Authorization').split(' ')[1];
     }
 
+    
     // 2. If there is absolutely no token, stop right here
     if (!token) {
         return res.status(401).json({ 
