@@ -445,20 +445,23 @@ router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
         const user = await User.findById(req.user.id);
 
 
-        // CHECK: Does this user actually have a password?
-        const hasExistingPassword = user.password && user.password.length > 0;
+        if (user.password) {
 
-        if (hasExistingPassword) {
-            // Standard Flow: Must verify old password
-            const isMatch = await bcrypt.compare(String(oldPassword), String(user.password));
-            if (!isMatch) {
-                return res.status(400).json({
-                    type: 'VALIDATION_ERROR',
-                    message: "Current password is incorrect"
-                });
+            // CHECK: Does this user actually have a password?
+            const hasExistingPassword = user.password && user.password.length > 0;
+
+            if (hasExistingPassword) {
+                // Standard Flow: Must verify old password
+                const isMatch = await bcrypt.compare(String(oldPassword), String(user.password));
+                if (!isMatch) {
+                    return res.status(400).json({
+                        type: 'VALIDATION_ERROR',
+                        message: "Current password is incorrect"
+                    });
+                }
             }
-        }
 
+        }
 
 
         // 2. Hash New Password
@@ -471,7 +474,7 @@ router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
 
             res.json({
                 message: hasExistingPassword ? "Password updated successfully." : "Password created successfully.",
-                hasPassword: true // Send this back so frontend knows they now have a password
+                
             });
 
         } catch (err) {

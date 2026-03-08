@@ -17,14 +17,18 @@ passport.use(new GoogleStrategy({
             });
 
             if (user) {
+
+               
+
                 // 2. If user exists but doesn't have a googleId, link them!
                 if (!user.googleId) {
                     user.googleId = profile.id;
                     user.isVerified = true;
-                    user.hasPassword = !!user.password;  
                     await user.save();
-                }
+                };
+
                 return done(null, user);
+
             }
         } catch (err) {
             return done(err, null);
@@ -41,6 +45,7 @@ passport.use(new GoogleStrategy({
                 email: profile.emails[0].value,
                 googleId: profile.id,
                 isVerified: true,// Google emails are pre-verified
+                hasPassword: false,// Google users don't have a password initially
                 currency: "NGN"
             });
 

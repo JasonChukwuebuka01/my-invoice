@@ -67,9 +67,10 @@ app.get('/', verifyToken, (req, res) => {
         address: req.user.address,
         phone: req.user.phone,
         signatureUrl: req.user.signatureUrl,
-        hasPassword: !!req.user.password
+        hasPassword: req.user.hasPassword
     };
 
+    //console.log("User from token:", req.user.hasPassword);
     res.status(200).json({ user });
 });
 

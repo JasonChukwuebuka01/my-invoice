@@ -53,6 +53,7 @@ router.post('/api/auth/signup',
                 name,
                 email,
                 password: hashedPassword,
+                hasPassword: true,
                 isVerified: false,
             });
 

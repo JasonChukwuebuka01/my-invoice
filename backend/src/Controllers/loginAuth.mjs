@@ -2,16 +2,20 @@ import jwt from 'jsonwebtoken';
 import { User } from '../mongoose/schemas/users.mjs';
 import bcrypt from 'bcryptjs';
 
+
+
 export const login = async (req, res) => {
+
     try {
+        
         const { email, password } = req.body;
 
         // 1. Find the user in the "Vault" (MongoDB)
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ 
-                message: "Invalid Email. Are you sure you signed up first?" 
+            return res.status(401).json({
+                message: "Invalid Email. Are you sure you signed up first?"
             });
         }
 
@@ -19,16 +23,17 @@ export const login = async (req, res) => {
         const isMatch = bcrypt.compareSync(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({ 
-                message: "Invalid Password. Is password Correct?" 
+            return res.status(401).json({
+                message: "Invalid Password. Is password Correct?"
             });
         }
 
-        // 3. Create the JWT Token
+
+      
         const token = jwt.sign(
-            { id: user._id }, 
+            { id: user._id },
             process.env.JWT_SECRET,
-            { expiresIn: '7d' } 
+            { expiresIn: '7d' }
         );
 
         // 4. SET THE HTTP-ONLY COOKIE 
@@ -54,7 +59,7 @@ export const login = async (req, res) => {
                 phone: user.phone,
                 signatureUrl: user.signatureUrl,
                 createdAt: user.createdAt,
-                hasPassword: !!user.password // Helper for your Settings page logic
+                hasPassword: user.hasPassword 
             }
         });
 

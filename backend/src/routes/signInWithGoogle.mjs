@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Router } from 'express';
 import "../strategy/google-strategy.mjs"
+import { User } from '../mongoose/schemas/users.mjs';
 
 
 
@@ -21,8 +22,28 @@ router.get('/api/google', passport.authenticate('google', { session: false, prom
 // 2. The Callback (Where Google sends the user back)
 router.get('/api/auth/google/callback',
     passport.authenticate('google', { session: false, failureRedirect: 'http://localhost:3001/sign-in' }),
-    (req, res) => {
+    async (req, res) => {
         try {
+
+            if (req.user.password) {
+
+                try {
+                    let user = await User.findById(req.user._id);
+
+                    if (user) {
+
+                        user.hasPassword = true;
+                        await user.save();
+                    };
+
+                } catch (err) {
+                    console.error("Error updating hasPassword flag:", err);
+                }
+
+            };
+
+           // console.log("User authenticated via Google, generating JWT:", req.user.password);
+
             // 1. Generate the JWT (using the user object from Passport)
             const token = jwt.sign(
                 { id: req.user._id },
@@ -40,7 +61,7 @@ router.get('/api/auth/google/callback',
                 path: '/',
             });
 
-           
+
             const name = encodeURIComponent(req.user.name);
             const email = req.user.email;
             const id = req.user._id;
