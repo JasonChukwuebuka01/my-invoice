@@ -18,8 +18,6 @@ passport.use(new GoogleStrategy({
 
             if (user) {
 
-               
-
                 // 2. If user exists but doesn't have a googleId, link them!
                 if (!user.googleId) {
                     user.googleId = profile.id;

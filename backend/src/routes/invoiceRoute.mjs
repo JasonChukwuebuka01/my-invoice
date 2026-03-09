@@ -445,23 +445,20 @@ router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
         const user = await User.findById(req.user.id);
 
 
-        if (user.password) {
+        // CHECK: Does this user actually have a password?
+        const hasExistingPassword = user.password && user.password.length > 0;
 
-            // CHECK: Does this user actually have a password?
-            const hasExistingPassword = user.password && user.password.length > 0;
-
-            if (hasExistingPassword) {
-                // Standard Flow: Must verify old password
-                const isMatch = await bcrypt.compare(String(oldPassword), String(user.password));
-                if (!isMatch) {
-                    return res.status(400).json({
-                        type: 'VALIDATION_ERROR',
-                        message: "Current password is incorrect"
-                    });
-                }
+        if (hasExistingPassword) {
+            // Standard Flow: Must verify old password
+            const isMatch = await bcrypt.compare(String(oldPassword), String(user.password));
+            if (!isMatch) {
+                return res.status(400).json({
+                    type: 'VALIDATION_ERROR',
+                    message: "Current password is incorrect"
+                });
             }
-
         }
+
 
 
         // 2. Hash New Password
@@ -469,12 +466,13 @@ router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
 
         user.password = await bcrypt.hash(newPassword, salt);
 
+        user.hasPassword = true;
+
         try {
             await user.save();
 
             res.json({
-                message: hasExistingPassword ? "Password updated successfully." : "Password created successfully.",
-                
+                message: "Password updated successfully."
             });
 
         } catch (err) {
@@ -489,6 +487,52 @@ router.patch('/invoice/api/change-password', verifyToken, async (req, res) => {
 });
 
 
+
+
+
+router.patch("/api/createPassword", verifyToken, async (req, res) => {
+
+    const { newPassword } = req.body;
+
+
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        };
+
+
+        // 2. Hash New Password
+        const salt = await bcrypt.genSalt(10);
+
+        user.password = await bcrypt.hash(newPassword, salt);
+        user.hasPassword = true;
+
+
+
+        try {
+            await user.save();
+
+            res.status(200).json({
+                message: "Password created successfully."
+            });
+
+        } catch (e) {
+
+            res.status(500).json({ message: "Failed to save password" });
+        }
+
+
+    } catch (e) {
+        res.status(500).json({ message: "Failed to create password" });
+    }
+
+
+})
 
 
 
