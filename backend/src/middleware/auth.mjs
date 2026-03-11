@@ -45,8 +45,7 @@ export const verifyToken = async (req, res, next) => {
         next();
 
     } catch (err) {
-        // If the token is fake or expired
-        console.error("JWT Verification Error:", err.message);
+      
 
         // BOSS MOVE: If the token is invalid, clear the cookie immediately 
         // so the frontend middleware kicks them out on the next click.
