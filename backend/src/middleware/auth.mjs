@@ -32,13 +32,13 @@ export const verifyToken = async (req, res, next) => {
         // Use .select('-password') to avoid carrying the hashed password around in 'req.user'
         const foundUser = await User.findById(verified.id).select('-password');
 
-        // console.log("confirming user data in auth middleware:", foundUser);
+        
 
         if (!foundUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // 5. Store the user info in the request object
+      
         req.user = foundUser;
 
         // 6. Move to the next function
