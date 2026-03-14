@@ -1,20 +1,22 @@
 
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv'; 
+
+dotenv.config(); 
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail', // or 'hotmail', etc.
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 
 
+ const sendVerificationEmail = async (email, token) => {
 
 
-const sendVerificationEmail = async (email, token) => {
-
-
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // or 'hotmail', etc.
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
 
     const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email/${token}`;
 
@@ -40,5 +42,45 @@ const sendVerificationEmail = async (email, token) => {
     }
 
 };
+
+
+export const sendPasswordResetEmail = async (userEmail, resetLink) => {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: userEmail,
+            subject: 'Reset Your Password',
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                    <h2 style="color: #0f172a;">Password Reset Request</h2>
+                    <p style="color: #475569; line-height: 1.6;">
+                        We received a request to reset the password for your mayicodes studio account. 
+                        If you didn't make this request, you can safely ignore this email.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+                        This link will expire in 15 minutes for your security.
+                    </p>
+                </div>
+            `
+        };
+
+
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${userEmail}`);
+
+    } catch (error) {
+        console.error("Error sending password reset email:", error);
+        throw error;
+    }
+};
+
+
+
 
 export default sendVerificationEmail;
