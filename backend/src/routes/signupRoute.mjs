@@ -33,7 +33,6 @@ router.post('/api/auth/signup',
 
             if (existingUser) {
                 if (!existingUser.isVerified) {
-                    // FIX: Actually generate a new token and resend the email
                     const token = jwt.sign(
                         { userId: existingUser._id },
                         process.env.JWT_SECRET,
@@ -72,14 +71,12 @@ router.post('/api/auth/signup',
                 { expiresIn: '1h' }
             );
 
-            // 4. Send Initial Verification Email
-            // Note: If this fails, the user is saved but the catch block triggers the 500 error
             await sendVerificationEmail(email, token);
 
             res.status(201).json({ message: 'Signup successful! Check your email to verify.' });
 
         } catch (error) {
-            
+
             res.status(500).json({ message: 'Failed to complete signup process.' });
         }
     }
@@ -104,7 +101,6 @@ router.get('/api/auth/verify-email/:token', async (req, res) => {
         res.status(200).json({ message: 'Email verified successfully!' });
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: 'Failed to verify email' });
     }
 });

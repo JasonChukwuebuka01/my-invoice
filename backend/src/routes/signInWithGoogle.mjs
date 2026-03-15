@@ -42,7 +42,7 @@ router.get('/api/auth/google/callback',
 
             };
 
-           // console.log("User authenticated via Google, generating JWT:", req.user.password);
+          
 
             // 1. Generate the JWT (using the user object from Passport)
             const token = jwt.sign(
@@ -66,9 +66,10 @@ router.get('/api/auth/google/callback',
             const email = req.user.email;
             const id = req.user._id;
             const onboarded = req.user.isOnboarded;
+            const isVerified = req.user.isVerified;
 
             // Redirect to a clean success URL
-            res.redirect(`http://localhost:3001/auth-success?name=${name}&email=${email}&id=${id}&isOnboarded=${onboarded}`);
+            res.redirect(`http://localhost:3001/auth-success?name=${name}&email=${email}&id=${id}&isOnboarded=${onboarded}&isVerified=${isVerified}`);
 
         } catch (error) {
             console.error("Google Auth Error:", error);

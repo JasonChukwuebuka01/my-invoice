@@ -59,7 +59,8 @@ export const login = async (req, res) => {
                 phone: user.phone,
                 signatureUrl: user.signatureUrl,
                 createdAt: user.createdAt,
-                hasPassword: user.hasPassword 
+                hasPassword: user.hasPassword,
+                isVerified:user.isVerified  
             }
         });
 
