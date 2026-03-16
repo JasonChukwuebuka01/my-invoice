@@ -1,11 +1,11 @@
 
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv'; 
+import dotenv from 'dotenv';
 
-dotenv.config(); 
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or 'hotmail', etc.
+    service: 'gmail', 
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
 
 
 
- const sendVerificationEmail = async (email, token) => {
+const sendVerificationEmail = async (email, token) => {
 
 
 
-    const verificationLink = `${process.env.BASE_URL}/api/auth/verify-email/${token}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -42,6 +42,9 @@ const transporter = nodemailer.createTransport({
     }
 
 };
+
+
+
 
 
 export const sendPasswordResetEmail = async (userEmail, resetLink) => {
@@ -72,12 +75,12 @@ export const sendPasswordResetEmail = async (userEmail, resetLink) => {
 
 
         await transporter.sendMail(mailOptions);
-        console.log(`Password reset email sent to ${userEmail}`);
+       
 
     } catch (error) {
         console.error("Error sending password reset email:", error);
         throw error;
-    }
+    };
 };
 
 

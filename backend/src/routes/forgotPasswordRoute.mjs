@@ -18,11 +18,11 @@ router.post('/api/auth/forgot-password',
 
     body('email').isEmail().withMessage('Please provide a valid email'),
     async (req, res) => {
-        
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
-        }
+        };
 
         const { email } = req.body;
 
@@ -57,6 +57,10 @@ router.post('/api/auth/forgot-password',
         }
     }
 );
+
+
+
+
 
 
 

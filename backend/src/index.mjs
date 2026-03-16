@@ -8,6 +8,7 @@ import signInWithGoogleRouter from './routes/signInWithGoogle.mjs';
 import invoiceRouter from './routes/invoiceRoute.mjs';
 import userOnboarding from './routes/userOnboarding.mjs';
 import forgotPasswordRoute from './routes/forgotPasswordRoute.mjs';
+import resendEmailVerificationRoute from './routes/resendEmailVerificationRoute.mjs';
 import puppeteer from 'puppeteer';
 import { generateHTML } from './utils/pdfTemplate.mjs';
 import mongoose from 'mongoose';
@@ -44,6 +45,7 @@ app.use(signInWithGoogleRouter);
 app.use(invoiceRouter);
 app.use(userOnboarding);
 app.use(forgotPasswordRoute);
+app.use(resendEmailVerificationRoute);
 app.use(passport.initialize());
 
 
