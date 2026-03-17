@@ -38,7 +38,7 @@ router.post('/api/auth/resend-verification', verifyToken, async (req, res) => {
         );
 
 
-        console.log(verificationToken);
+        
         await sendVerificationEmail(user.email, verificationToken);
 
 
@@ -57,23 +57,18 @@ router.post('/api/auth/resend-verification', verifyToken, async (req, res) => {
 
 
 // GET /api/auth/verify-email/:token
-router.get('/api/auth/verify-email/:token', async (req, res) => {
+router.get('/verify-email/:token', async (req, res) => {
     const { token } = req.params;
 
     try {
 
-        console.log("caught you")
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        console.log(decoded);
-
+        
         const user = await User.findById(decoded.id);
 
-        console.log("checking user in express", user);
-
-
-
+       
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
