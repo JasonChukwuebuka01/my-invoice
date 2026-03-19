@@ -81,10 +81,19 @@ app.get('/', verifyToken, (req, res) => {
 
 app.get('/api/confirm/user', verifyToken, (req, res) => {
 
+
     const userDetails = {
+        id: req.user._id,
         name: req.user.name,
         email: req.user.email,
-        currency: req.user.currency,
+        isOnboarded: req.user.isOnboarded,
+        companyName: req.user.companyName,
+        address: req.user.address,
+        phone: req.user.phone,
+        signatureUrl: req.user.signatureUrl,
+        createdAt: req.user.createdAt,
+        hasPassword: req.user.hasPassword,
+        isVerified: req.user.isVerified
     }
     res.status(200).json({ userDetails });
 });

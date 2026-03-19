@@ -38,7 +38,7 @@ router.post('/api/auth/resend-verification', verifyToken, async (req, res) => {
         );
 
 
-        
+
         await sendVerificationEmail(user.email, verificationToken);
 
 
@@ -65,10 +65,10 @@ router.get('/verify-email/:token', async (req, res) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        
+
         const user = await User.findById(decoded.id);
 
-       
+
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
@@ -83,6 +83,11 @@ router.get('/verify-email/:token', async (req, res) => {
 
         await user.save();
 
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
 
         return res.status(200).json({ message: "Email verified successfully!" });
 

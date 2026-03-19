@@ -10,7 +10,7 @@ export const login = async (req, res) => {
         
         const { email, password } = req.body;
 
-        // 1. Find the user in the "Vault" (MongoDB)
+        
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -19,7 +19,7 @@ export const login = async (req, res) => {
             });
         }
 
-        // 2. Verify Password
+ 
         const isMatch = bcrypt.compareSync(password, user.password);
 
         if (!isMatch) {
@@ -36,8 +36,7 @@ export const login = async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        // 4. SET THE HTTP-ONLY COOKIE 
-        // This is the key change. The browser will handle this automatically.
+      
         res.cookie('token', token, {
             httpOnly: true,                                  // Security: JS cannot read this
             secure: process.env.NODE_ENV === 'production',   // HTTPS only in production
@@ -46,7 +45,7 @@ export const login = async (req, res) => {
             path: '/',                                       // Available to all routes
         });
 
-        // 5. Send the response WITHOUT the token in the JSON body
+       
         res.status(200).json({
             message: "Login successful",
             user: {
