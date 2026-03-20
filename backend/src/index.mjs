@@ -62,7 +62,7 @@ mongoose.connect("mongodb://localhost/invoicegeneratorapi")
 app.get('/', verifyToken, (req, res) => {
 
 
-    const user = {
+    const userDetails = {
         name: req.user.name,
         currency: req.user.currency,
         defaultTax: req.user.defaultTax,
@@ -75,7 +75,7 @@ app.get('/', verifyToken, (req, res) => {
     };
 
     //console.log("User from token:", req.user.hasPassword);
-    res.status(200).json({ user });
+    res.status(200).json({ userDetails });
 });
 
 
