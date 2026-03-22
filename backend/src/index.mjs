@@ -74,7 +74,7 @@ app.get('/', verifyToken, (req, res) => {
         hasPassword: req.user.hasPassword
     };
 
-    //console.log("User from token:", req.user.hasPassword);
+   
     res.status(200).json({ userDetails });
 });
 

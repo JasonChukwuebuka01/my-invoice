@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     companyName: { type: String, default: "" },
     address: { type: String, default: "" },
     phone: { type: String, default: "" },
-    currency: { type: String, default: "" },
+    currency: { type: String, default: "NGN" },
     defaultTax: { type: Number, default: 0 },
     bankDetails: { type: String, default: "" },
     signatureUrl: { type: String, default: "" }, // We will store the file URL here
