@@ -149,9 +149,10 @@ export const generateHTML = (data) => {
           </div>
           <div style="text-align: right;">
             <span class="label">Information</span>
-            <div class="date-val">Issued: ${billing.issuedDate}</div>
+            <div class="date-val">Issued: ${new Date(billing.issuedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
 
-          </div>
+          </div> </div>
+           
         </div>
 
         <table>
