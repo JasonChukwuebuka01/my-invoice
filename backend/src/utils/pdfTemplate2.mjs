@@ -149,7 +149,7 @@ export const generateHTML2 = (data) => {
           </div>
           <div style="text-align: right;">
             <span class="label">Information</span>
-            <div class="date-val">Issued: ${new Date(updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            <div class="date-val">Updated: ${new Date(updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
 
           </div>
         </div>
