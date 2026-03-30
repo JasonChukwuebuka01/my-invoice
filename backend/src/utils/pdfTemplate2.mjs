@@ -86,20 +86,27 @@ export const generateHTML2 = (data) => {
         .due-val { font-size: 14px; color: #64748B; margin-top: 5px; font-weight: 600; }
 
         /* ITEMS TABLE STYLES UPDATE */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 50px; position: relative; z-index: 10; table-layout: fixed; }
-        th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #CBD5E1; padding-bottom: 20px; border-bottom: 2px solid #0F172A; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 50px; position: relative; z-index: 10; }
+        th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #CBD5E1; padding: 0 15px 20px 15px; border-bottom: 2px solid #0F172A; }
+        th:first-child { padding-left: 0; }
+        th:last-child { padding-right: 0; }
         
         /* Specific column alignments */
-        th.right, td.right { text-align: right; }
-        th.center, td.center { text-align: center; }
+        th.right, td.right { text-align: right; color:#000000; font-weight: 900; }
+        th.center, td.center { text-align: center; color:#000000; font-weight: 900; }
+        th.desc, td.desc { text-align: left; color:#000000; font-weight: 900; }
+
+      
         
-        td { padding: 25px 0; border-bottom: 1px solid #F8FAFC; vertical-align: top; }
+        td { padding: 25px 15px; border-bottom: 1px solid #F8FAFC; vertical-align: top; }
+        td:first-child { padding-left: 0; }
+        td:last-child { padding-right: 0; }
         
         .item-desc { font-size: 18px; font-weight: 700; color: #0F172A; }
         .item-sub { font-size: 11px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
         /* Font size adjustment for number columns to match hierarchy */
         .item-text { font-size: 16px; font-weight: 600; color: #475569; } 
-        .item-total { font-size: 20px; font-weight: 800; text-align: right; letter-spacing: -0.5px; }
+        .item-total { font-size: 16px; font-weight: 800; text-align: right;  }
 
         /* BOTTOM SECTION */
         .bottom-section { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px; position: relative; z-index: 10; }
@@ -113,7 +120,7 @@ export const generateHTML2 = (data) => {
         .t-label {margin-right:10px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94A3B8; }
         .t-value { font-size: 14px; font-weight: 700; color: #0F172A; }
         .grand-total { margin-top: 25px; padding-top: 25px; border-top: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: flex-end; }
-        .balance-val { font-size: 48px; font-weight: 800; letter-spacing: -2px; line-height: 0.8; font-style: italic; color: ${statusColor}; }
+        .balance-val { font-size: ${isPaid ? '48px' : '26px'}; font-weight: 800; letter-spacing: ${isPaid ? '-2px' : '-1px'}; line-height: 1; font-style: italic; color: ${statusColor}; text-align: right; }
 
         /* FOOTER */
         .footer { position: absolute; bottom: 60px; left: 80px; right: 80px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #F8FAFC; padding-top: 40px; }
@@ -157,7 +164,7 @@ export const generateHTML2 = (data) => {
         <table>
           <thead>
             <tr>
-              <th style="width: 50%">Description</th>
+              <th style="width: 50%" class ="desc">Description</th>
               <th class="center" style="width: 15%">Qty</th>
               <th class="right" style="width: 15%">Rate</th>
               <th class="right" style="width: 20%">Total</th>

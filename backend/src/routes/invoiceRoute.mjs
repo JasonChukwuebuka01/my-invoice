@@ -391,8 +391,9 @@ router.patch('/invoice/api/settings/update', verifyToken, async (req, res) => {
             signatureUrl,
             currency,
             defaultTax,
-            brandColor,
-            bankDetails
+            bankDetails,
+            motto
+
         } = req.body;
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -406,8 +407,8 @@ router.patch('/invoice/api/settings/update', verifyToken, async (req, res) => {
                     signatureUrl,
                     currency,
                     defaultTax,
-                    brandColor,
-                    bankDetails
+                    bankDetails,
+                    motto
                 }
             },
             { new: true, runValidators: true } // Returns the updated document
